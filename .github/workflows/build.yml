@@ -26,13 +26,16 @@ jobs:
         outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.bios-init.config.system.build.image)
         echo "outPath=$outPath" >> "$GITHUB_ENV"
     
-    - name: Limine Bios Install 
+    - name: Limine Bios Install
       run: |
-        cp $outPath/bios-init.raw  .
-        sudo /nix/var/nix/profiles/default/bin/nix run nixpkgs#limine bios-install ./bios-init.raw
+        cp $outPath/bios-init.raw .
+        LIMINE=$(nix build --no-link --print-out-paths .#limine)
+        sudo "$LIMINE/bin/limine" bios-install ./bios-init.raw
+
+    - run: nix profile add nixpkgs#rclone
 
     - name: Upload
-      run: nix run nixpkgs#rclone -v copy  ./bios-init.raw  oracle:us
+      run: rclone -v copy  ./bios-init.raw  oracle:us
 
 
 
@@ -59,9 +62,10 @@ jobs:
         outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.amd-init.config.system.build.image)
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
-    - name: Upload
-      run: nix run nixpkgs#rclone -v copy $outPath/amd-init.raw  oracle:us
+    - run: nix profile add nixpkgs#rclone
 
+    - name: Upload
+      run: rclone -v copy  $outPath/amd-init.raw  oracle:us
 
   arm-init:
     runs-on: ubuntu-24.04-arm
@@ -86,5 +90,7 @@ jobs:
         outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.arm-init.config.system.build.image)
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
+    - run: nix profile add nixpkgs#rclone
+
     - name: Upload
-      run: nix run nixpkgs#rclone -v copy $outPath/arm-init.raw  oracle:us
+      run: rclone -v copy  $outPath/amd-init.raw  oracle:us
