@@ -89,9 +89,8 @@ in
 
   boot.initrd.systemd.emergencyAccess = true;
 
-  # boot.loader.limine.enable = true;
-  # boot.loader.limine.biosSupport = true;
-  # boot.loader.limine.efiSupport = false; 
+  boot.loader.limine.enable = true;
+
 
   fileSystems."/boot" = {
     device = lib.mkDefault "/dev/vda2";
