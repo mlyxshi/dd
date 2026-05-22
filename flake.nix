@@ -18,6 +18,10 @@
             }
           ];
         };
+        
+        # nix build --no-link --print-out-paths .#nixosConfigurations.bios-init.config.system.build.image
+        bios-init = nixpkgs.lib.nixosSystem { modules = [ ./bios-repart.nix ]; };
+
         bios-vda-init = nixpkgs.lib.nixosSystem { modules = [ ./bios.nix ]; };
         bios-sda-init = nixpkgs.lib.nixosSystem {
           modules = [
