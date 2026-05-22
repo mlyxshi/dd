@@ -21,20 +21,9 @@
         };
 
         # BIOS
-        bios-init = nixpkgs.lib.nixosSystem { modules = [ ./bios-repart.nix ]; };
-
-        # bios-vda-init = nixpkgs.lib.nixosSystem { modules = [ ./bios.nix ]; };
-        # bios-sda-init = nixpkgs.lib.nixosSystem {
-        #   modules = [
-        #     ./bios.nix
-        #     {
-        #       fileSystems."/boot".device = "/dev/sda2";
-        #       fileSystems."/".device = "/dev/sda3";
-        #     }
-        #   ];
-        # };
+        bios-init = nixpkgs.lib.nixosSystem { modules = [ ./bios.nix ]; };
       };
-      
+
       packages.x86_64-linux.limine = nixpkgs.legacyPackages.x86_64-linux.limine;
 
     };

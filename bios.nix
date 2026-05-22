@@ -5,11 +5,73 @@
   modulesPath,
   ...
 }:
+let
+  closureInfo = pkgs.closureInfo {
+    rootPaths = [ config.system.build.toplevel ];
+  };
+
+  nixState = pkgs.runCommand "nix-state" { nativeBuildInputs = [ pkgs.buildPackages.nix ]; } ''
+    mkdir -p $out/profiles
+    ln -s ${config.system.build.toplevel} $out/profiles/system-1-link
+    ln -s /nix/var/nix/profiles/system-1-link $out/profiles/system
+
+    export NIX_STATE_DIR=$out
+    nix-store --load-db < ${closureInfo}/registration
+  '';
+in
 {
 
-  imports = [ "${modulesPath}/profiles/qemu-guest.nix" ];
+  image.repart = {
+    name = config.networking.hostName;
+    partitions = {
+      "bios" = {
+        repartConfig = {
+          Type = "21686148-6449-6E6F-744E-656564454649"; # BIOS boot partition Type UUID
+          SizeMinBytes = "1M";
+        };
+      };
+      "esp" = {
+        contents = {
+          "/limine/limine-bios.sys".source = "${pkgs.limine}/share/limine/limine-bios.sys";
+          "/limine/limine.conf".source = pkgs.writeText "limine.conf" ''
+            timeout: 1
+            default_entry: 1
 
-  networking.hostName = "x86-64-bios-init";
+            /NixOS
+                protocol: linux
+                kernel_path: boot():/limine/kernels/kernel
+                module_path: boot():/limine/kernels/initrd
+                cmdline: init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}
+          '';
+          "/limine/kernels/initrd".source = "${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}";
+          "/limine/kernels/kernel".source = "${config.system.build.kernel}/${config.system.boot.loader.kernelFile}";
+        };
+        repartConfig = {
+          Type = "esp";
+          Format = "vfat";
+          SizeMinBytes = "300M";
+        };
+      };
+      "root" = {
+        storePaths = [ config.system.build.toplevel ];
+        contents = {
+          "/nix/var/nix".source = nixState;
+        };
+        repartConfig = {
+          Type = "root";
+          Format = "ext4";
+          Minimize = "guess";
+        };
+      };
+    };
+  };
+
+  imports = [
+    "${modulesPath}/profiles/qemu-guest.nix"
+    "${modulesPath}/image/repart.nix"
+  ];
+
+  networking.hostName = "bios-init";
   nixpkgs.hostPlatform = "x86_64-linux";
 
   services.getty.autologinUser = "root";
@@ -28,12 +90,7 @@
   boot.initrd.systemd.emergencyAccess = true;
 
   boot.loader.limine.enable = true;
-  boot.loader.limine.biosSupport = true;
-  boot.loader.limine.efiSupport = false;
-  # Only the stage 2 bootloader will be installed, install stage1 separately manuanlly
-  boot.loader.limine.biosDevice = "nodev";
-  boot.loader.limine.maxGenerations = 2;
-  boot.loader.timeout = 1;
+
 
   fileSystems."/boot" = {
     device = lib.mkDefault "/dev/vda2";
@@ -107,6 +164,8 @@
 
   environment.systemPackages = with pkgs; [
     gitMinimal
+    fastfetch.minimal
+    ghostty.terminfo
   ];
 
   fonts.fontconfig.enable = false;
@@ -152,9 +211,9 @@
 
     script = ''
       mkdir -p /cloud-init
-      mount /dev/disk/by-label/cidata /cloud-init
+      mount -r /dev/disk/by-label/cidata /cloud-init
       mkdir -p /run/systemd/network/
-      NETWORKD_CONF="/run/systemd/network/ethernet.network"
+      NETWORKD_CONF="/run/systemd/network/10-cloud-init.network"
       CLOUD_INIT_CONF="/cloud-init/network-config"
 
       VERSION=$(yq .version $CLOUD_INIT_CONF)
