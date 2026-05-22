@@ -7,13 +7,14 @@
 }:
 {
 
+
   image.repart = {
     name = config.networking.hostName;
     partitions = {
       "bios" = {
         repartConfig = {
-          Type = "linux-generic";
-          Flags = "0x4";
+          Type = "21686148-6449-6E6F-744E-656564454649";
+          # Flags = "0x4";
           SizeMinBytes = "1M";
         };
       };
