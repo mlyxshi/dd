@@ -32,7 +32,7 @@ jobs:
         nix run nixpkgs#limine bios-install ./bios-init.raw
 
     - name: Upload
-      run: nix run nixpkgs#rclone copy  ./bios-init.raw  oracle:us
+      run: nix run nixpkgs#rclone -v copy  ./bios-init.raw  oracle:us
 
 
 
@@ -60,7 +60,7 @@ jobs:
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
     - name: Upload
-      run: nix run nixpkgs#rclone copy $outPath/amd-init.raw  oracle:us
+      run: nix run nixpkgs#rclone -v copy $outPath/amd-init.raw  oracle:us
 
 
   arm-init:
@@ -87,4 +87,4 @@ jobs:
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
     - name: Upload
-      run: nix run nixpkgs#rclone copy $outPath/arm-init.raw  oracle:us
+      run: nix run nixpkgs#rclone -v copy $outPath/arm-init.raw  oracle:us
