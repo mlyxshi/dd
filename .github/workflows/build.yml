@@ -28,11 +28,11 @@ jobs:
     
     - name: Limine Bios Install 
       run: |
-        cp $outPath/bios-init.raw /tmp
-        nix run nixpkgs#limine bios-install /tmp/bios-init.raw
+        cp $outPath/bios-init.raw  .
+        nix run nixpkgs#limine bios-install ./bios-init.raw
 
     - name: Upload
-      run: nix run nixpkgs#rclone copy  /tmp/bios-init.raw  oracle:us
+      run: nix run nixpkgs#rclone copy  ./bios-init.raw  oracle:us
 
 
 
