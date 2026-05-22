@@ -33,9 +33,18 @@ in
       "esp" = {
         contents = {
           "/limine/limine-bios.sys".source = "${pkgs.limine}/share/limine-bios.sys";
-          "/limine/limine.conf".source = "";
-          "/limine/kernels/initrd".source = "";
-          "/limine/kernels/kernel".source = "";
+          "/limine/limine.conf".source = pkgs.writeText "limine.conf" ''
+            timeout: 1
+            default_entry: 1
+
+            /NixOS
+                protocol: linux
+                kernel_path: boot():/limine/kernels/kernel
+                module_path: boot():/limine/kernels/initrd
+                cmdline: init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}
+          '';
+          "/limine/kernels/initrd".source = "${config.system.build.initialRamdisk}/${config.system.boot.loader.initrdFile}";
+          "/limine/kernels/kernel".source = "${config.system.build.kernel}/${config.system.boot.loader.kernelFile}";
         };
         repartConfig = {
           Type = "esp";
@@ -80,13 +89,9 @@ in
 
   boot.initrd.systemd.emergencyAccess = true;
 
-  boot.loader.limine.enable = true;
-  boot.loader.limine.biosSupport = true;
-  boot.loader.limine.efiSupport = false;
-  # Only the stage 2 bootloader will be installed, install stage1 separately manuanlly
-  boot.loader.limine.biosDevice = "nodev";
-  boot.loader.limine.maxGenerations = 2;
-  boot.loader.timeout = 1;
+  # boot.loader.limine.enable = true;
+  # boot.loader.limine.biosSupport = true;
+  # boot.loader.limine.efiSupport = false; 
 
   fileSystems."/boot" = {
     device = lib.mkDefault "/dev/vda2";
