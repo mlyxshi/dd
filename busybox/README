@@ -1,0 +1,36 @@
+Minimal BusyBox-based initrd for experimentation and learning.
+For daily use, prefer a systemd-based initrd.
+
+
+aka pkgsMusl
+pkgsMuslDynamic = import <nixpkgs> {
+  localSystem = {
+    config = "aarch64-unknown-linux-musl";
+  };
+};
+
+aka pkgsStatic
+pkgsMuslStatic = import <nixpkgs> {
+  localSystem = {
+    config = "aarch64-unknown-linux-gnu";
+  };
+  crossSystem = {
+    config = "aarch64-unknown-linux-musl";
+    isStatic = true;
+  };
+};
+
+
+virtio_pci
+
+virtio_net
+af_packet
+
+virtio_blk # -device virtio-blk-pci (/dev/vdX)
+
+virtio_scsi # Virtio SCSI controller  # -device virtio-scsi-pci  
+sd_mod # SCSI DISK driver (/dev/sdX) # -device scsi-hd
+sr_mod # SCSI CD-ROM driver (/dev/srX) # cloud-init cidata disk
+
+ahci # SATA controllers
+isofs # mount /dev/sr1 /cloud-init

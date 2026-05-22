@@ -1,0 +1,57 @@
+#!/bin/busybox sh
+
+# udhcpc callback: invoked as `/init <event>` by `udhcpc -s /init`
+# https://gitlab.alpinelinux.org/alpine/aports/-/blob/master/main/busybox/default.script
+if [ -n "$1" ]; then
+  echo "DHCP: $1"
+  case "$1" in
+    bound)
+      ip addr add "$ip/$mask" dev eth0
+      [ "$mask" = "32" ] && onlink="onlink"
+      ip route add default via "$router" dev eth0 $onlink
+      for s in $dns; do echo "nameserver $s"; done > /etc/resolv.conf
+      ;;
+    leasefail)  # only support nocloud network-config version1
+      mkdir /cloud-init
+      mount -r $(findfs LABEL=cidata) /cloud-init
+      eval $(cloud-init-networkcfg /cloud-init/network-config)
+      ip addr add "$IP/$PREFIX" dev eth0
+      ip route add default via $GATEWAY dev eth0 $ONLINK
+      echo "nameserver 1.1.1.1" > /etc/resolv.conf
+      ip addr show eth0
+      ip route show
+      ;;
+  esac
+  exit 0
+fi
+
+# --- below here: PID 1 init ---
+/bin/busybox --install -s /bin
+
+mkdir -p /dev /proc /sys /etc
+mount -t devtmpfs none /dev
+mount -t proc    none /proc
+mount -t sysfs   none /sys
+
+
+ip link set eth0 up
+# -q: exit immediately after lease;  -n: exit if no lease obtained after 9s
+udhcpc -i eth0 -s /init -q -n
+
+DEVICE= URL=
+for arg in $(cat /proc/cmdline); do
+  case $arg in
+    device=*) DEVICE=${arg#device=} ;;
+    url=*)    URL=${arg#url=} ;;
+  esac
+done
+
+if [ -n "$DEVICE" ]; then
+  echo "Target Device: $DEVICE <  $URL"
+  wget -O "$DEVICE" "$URL"
+  reboot -f
+else
+  nc -l -p 23333 -e /bin/sh &
+fi
+
+exec /bin/sh

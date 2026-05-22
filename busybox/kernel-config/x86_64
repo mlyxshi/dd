@@ -1,0 +1,14 @@
+# ttyS0
+CONFIG_SERIAL_8250=y
+CONFIG_SERIAL_8250_CONSOLE=y
+
+# vga
+CONFIG_DRM_BOCHS=y
+
+# cat /proc/bus/input/devices
+# Standard AT or PS/2 keyboard 
+CONFIG_INPUT_KEYBOARD=y
+CONFIG_KEYBOARD_ATKBD=y
+
+# only for GCP e2-micro free machine
+CONFIG_VIRTIO_PCI_LEGACY=y
