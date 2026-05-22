@@ -29,13 +29,10 @@ jobs:
     - name: Limine Bios Install
       run: |
         cp $outPath/bios-init.raw .
-        LIMINE=$(nix build --no-link --print-out-paths .#limine)
-        sudo "$LIMINE/bin/limine" bios-install ./bios-init.raw
+        sudo nix run .#limine -- bios-install ./bios-init.raw
 
     - run: nix profile add nixpkgs#rclone
-
-    - name: Upload
-      run: rclone -v copy  ./bios-init.raw  oracle:us
+    - run: rclone -v copy  ./bios-init.raw  oracle:us
 
 
 
@@ -63,9 +60,7 @@ jobs:
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
     - run: nix profile add nixpkgs#rclone
-
-    - name: Upload
-      run: rclone -v copy  $outPath/amd-init.raw  oracle:us
+    - run: rclone -v copy  $outPath/amd-init.raw  oracle:us
 
   arm-init:
     runs-on: ubuntu-24.04-arm
@@ -91,6 +86,4 @@ jobs:
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
     - run: nix profile add nixpkgs#rclone
-
-    - name: Upload
-      run: rclone -v copy  $outPath/amd-init.raw  oracle:us
+    - run: rclone -v copy  $outPath/amd-init.raw  oracle:us
