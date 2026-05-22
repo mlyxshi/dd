@@ -32,7 +32,7 @@ in
       };
       "esp" = {
         contents = {
-          "/limine/limine-bios.sys".source = "${pkgs.limine}/share/limine-bios.sys";
+          "/limine/limine-bios.sys".source = "${pkgs.limine}/share/limine/limine-bios.sys";
           "/limine/limine.conf".source = pkgs.writeText "limine.conf" ''
             timeout: 1
             default_entry: 1
