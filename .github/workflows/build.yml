@@ -1,0 +1,90 @@
+name: "Create DD image"
+on:
+  workflow_dispatch:
+
+jobs:
+  bios-init:
+    runs-on: ubuntu-latest  
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: DeterminateSystems/nix-installer-action@main
+    - run: |
+        mkdir ~/.oci
+        echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
+        echo "${{ secrets.OCI_API_KEY}}" > ~/.oci/oci_api_key.pem  
+        chmod 600 ~/.oci/config
+        chmod 600 ~/.oci/oci_api_key.pem
+
+        mkdir -p ~/.config/rclone
+        echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+
+    - name: System Build
+      # https://github.com/chainguard-dev/melange/issues/1508
+      run: |
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.bios-init.config.system.build.image)
+        echo "outPath=$outPath" >> "$GITHUB_ENV"
+    
+    - name: Limine Bios Install 
+      run: |
+        cp $outPath/bios-init.raw /tmp
+        nix run nixpkgs#limine bios-install /tmp/bios-init.raw
+
+    - name: Upload
+      run: nix run nixpkgs#rclone copy  /tmp/bios-init.raw  oracle:us
+
+
+
+  amd-init:
+    runs-on: ubuntu-latest  
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: DeterminateSystems/nix-installer-action@main
+    - run: |
+        mkdir ~/.oci
+        echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
+        echo "${{ secrets.OCI_API_KEY}}" > ~/.oci/oci_api_key.pem  
+        chmod 600 ~/.oci/config
+        chmod 600 ~/.oci/oci_api_key.pem
+
+        mkdir -p ~/.config/rclone
+        echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+
+    - name: System Build
+      # https://github.com/chainguard-dev/melange/issues/1508
+      run: |
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.amd-init.config.system.build.image)
+        echo "outPath=$outPath" >> "$GITHUB_ENV"
+
+    - name: Upload
+      run: nix run nixpkgs#rclone copy $outPath/amd-init.raw  oracle:us
+
+
+  arm-init:
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: DeterminateSystems/nix-installer-action@main
+    - run: |
+        mkdir ~/.oci
+        echo "${{ secrets.OCI_CONFIG }}" > ~/.oci/config
+        echo "${{ secrets.OCI_API_KEY}}" > ~/.oci/oci_api_key.pem  
+        chmod 600 ~/.oci/config
+        chmod 600 ~/.oci/oci_api_key.pem
+
+        mkdir -p ~/.config/rclone
+        echo "${{ secrets.RCLONE_CONFIG }}" > ~/.config/rclone/rclone.conf
+
+    - name: System Build
+      # https://github.com/chainguard-dev/melange/issues/1508
+      run: |
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.arm-init.config.system.build.image)
+        echo "outPath=$outPath" >> "$GITHUB_ENV"
+
+    - name: Upload
+      run: nix run nixpkgs#rclone copy $outPath/arm-init.raw  oracle:us

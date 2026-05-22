@@ -7,8 +7,9 @@
     { self, nixpkgs }:
     {
       nixosConfigurations = {
-        # nix build --no-link --print-out-paths .#nixosConfigurations.arm-init.config.system.build.image
+        # UEFI 
         arm-init = nixpkgs.lib.nixosSystem { modules = [ ./arm.nix ]; };
+        
         amd-init = nixpkgs.lib.nixosSystem {
           modules = [
             ./arm.nix
@@ -18,20 +19,20 @@
             }
           ];
         };
-        
-        # nix build --no-link --print-out-paths .#nixosConfigurations.bios-init.config.system.build.image
+
+        # BIOS
         bios-init = nixpkgs.lib.nixosSystem { modules = [ ./bios-repart.nix ]; };
 
-        bios-vda-init = nixpkgs.lib.nixosSystem { modules = [ ./bios.nix ]; };
-        bios-sda-init = nixpkgs.lib.nixosSystem {
-          modules = [
-            ./bios.nix
-            {
-              fileSystems."/boot".device = "/dev/sda2";
-              fileSystems."/".device = "/dev/sda3";
-            }
-          ];
-        };
+        # bios-vda-init = nixpkgs.lib.nixosSystem { modules = [ ./bios.nix ]; };
+        # bios-sda-init = nixpkgs.lib.nixosSystem {
+        #   modules = [
+        #     ./bios.nix
+        #     {
+        #       fileSystems."/boot".device = "/dev/sda2";
+        #       fileSystems."/".device = "/dev/sda3";
+        #     }
+        #   ];
+        # };
       };
     };
 }

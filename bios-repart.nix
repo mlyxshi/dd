@@ -71,7 +71,7 @@ in
     "${modulesPath}/image/repart.nix"
   ];
 
-  networking.hostName = "x86-64-bios-init";
+  networking.hostName = "bios-init";
   nixpkgs.hostPlatform = "x86_64-linux";
 
   services.getty.autologinUser = "root";
