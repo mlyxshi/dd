@@ -110,6 +110,8 @@ in
 
   environment.systemPackages = with pkgs; [
     gitMinimal
+    fastfetch.minimal
+    ghostty.terminfo
   ];
 
   fonts.fontconfig.enable = false;

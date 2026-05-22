@@ -86,4 +86,4 @@ jobs:
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
     - run: nix profile add nixpkgs#rclone
-    - run: rclone -v copy  $outPath/amd-init.raw  oracle:us
+    - run: rclone -v copy  $outPath/arm-init.raw  oracle:us

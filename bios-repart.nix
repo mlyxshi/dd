@@ -164,6 +164,8 @@ in
 
   environment.systemPackages = with pkgs; [
     gitMinimal
+    fastfetch.minimal
+    ghostty.terminfo
   ];
 
   fonts.fontconfig.enable = false;
@@ -209,9 +211,9 @@ in
 
     script = ''
       mkdir -p /cloud-init
-      mount /dev/disk/by-label/cidata /cloud-init
+      mount -r /dev/disk/by-label/cidata /cloud-init
       mkdir -p /run/systemd/network/
-      NETWORKD_CONF="/run/systemd/network/ethernet.network"
+      NETWORKD_CONF="/run/systemd/network/10-cloud-init.network"
       CLOUD_INIT_CONF="/cloud-init/network-config"
 
       VERSION=$(yq .version $CLOUD_INIT_CONF)
