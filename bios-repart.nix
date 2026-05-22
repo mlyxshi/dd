@@ -5,42 +5,55 @@
   modulesPath,
   ...
 }:
-{
+let
+  closureInfo = pkgs.closureInfo {
+    rootPaths = [ config.system.build.toplevel ];
+  };
 
+  nixState = pkgs.runCommand "nix-state" { nativeBuildInputs = [ pkgs.buildPackages.nix ]; } ''
+    mkdir -p $out/profiles
+    ln -s ${config.system.build.toplevel} $out/profiles/system-1-link
+    ln -s /nix/var/nix/profiles/system-1-link $out/profiles/system
+
+    export NIX_STATE_DIR=$out
+    nix-store --load-db < ${closureInfo}/registration
+  '';
+in
+{
 
   image.repart = {
     name = config.networking.hostName;
     partitions = {
       "bios" = {
         repartConfig = {
-          Type = "21686148-6449-6E6F-744E-656564454649";
-          # Flags = "0x4";
+          Type = "21686148-6449-6E6F-744E-656564454649"; # BIOS boot partition Type UUID
           SizeMinBytes = "1M";
         };
       };
       "esp" = {
-        contents =
-          let
-            efiArch = config.nixpkgs.hostPlatform.efiArch;
-          in
-          {
-            "/hello".source = "${pkgs.hello}/bin/hello";
-
-          };
+        contents = {
+          "/limine/limine-bios.sys".source = "${pkgs.limine}/share/limine-bios.sys";
+          "/limine/limine.conf".source = "";
+          "/limine/kernels/initrd".source = "";
+          "/limine/kernels/kernel".source = "";
+        };
         repartConfig = {
           Type = "esp";
           Format = "vfat";
           SizeMinBytes = "300M";
         };
       };
-      # "root" = {
-      #   storePaths = [ config.system.build.toplevel ];
-      #   repartConfig = {
-      #     Type = "root";
-      #     Format = "ext4";
-      #     Minimize = "guess";
-      #   };
-      # };
+      "root" = {
+        storePaths = [ config.system.build.toplevel ];
+        contents = {
+          "/nix/var/nix".source = nixState;
+        };
+        repartConfig = {
+          Type = "root";
+          Format = "ext4";
+          Minimize = "guess";
+        };
+      };
     };
   };
 
