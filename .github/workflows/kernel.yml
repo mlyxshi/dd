@@ -1,0 +1,80 @@
+name: Alpine Build Minimal BusyBox Kernel
+
+on:
+  workflow_dispatch:
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    container:
+      image: alpine:latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-latest
+            kernel_target: bzImage
+            kernel_path: arch/x86/boot/bzImage
+            release_name: x86_64
+
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+            kernel_target: vmlinuz.efi
+            kernel_path: arch/arm64/boot/vmlinuz.efi
+            release_name: aarch64
+
+    steps:
+      - name: Build
+        run: |
+          set -e
+
+          echo ">>> Installing dependencies..."
+          apk add --no-cache \
+            curl bash git github-cli build-base ncurses-dev \
+            bison flex bc perl elfutils-dev linux-headers zstd
+
+          # Use GNU Findutils, busybox-find does not support "-printf", https://github.com/torvalds/linux/blob/master/usr/gen_initramfs.sh
+          curl -L -o /usr/local/bin/find  https://github.com/mlyxshi/dd/releases/download/${{ matrix.release_name }}/find
+          chmod +x /usr/local/bin/find
+
+          echo ">>> Cloning repositories..."
+          git clone --depth=1 https://git.busybox.net/busybox/ /busybox
+          git clone --depth=1 https://github.com/torvalds/linux /linux
+          git clone --depth=1 https://github.com/mlyxshi/dd /dd
+
+
+          echo ">>> Building BusyBox..."
+          cd /busybox
+          cp  /dd/kernel/cloud_init_networkcfg.c  miscutils/cloud_init_networkcfg.c
+          make allnoconfig
+          for opt in $(grep '^CONFIG_.*' /dd/kernel/busybox.config); do sed -i "s|^# $opt is not set|$opt=y|" .config; done
+          make LDFLAGS=--static -j$(nproc)
+
+
+          echo ">>> Creating initramfs list..."
+          cat > /tmp/cpio.list <<EOF
+          dir /dev 0755 0 0
+          nod /dev/console 0600 0 0 c 5 1
+          dir /bin 0755 0 0
+          file /init /dd/kernel/init 0755 0 0
+          file /udhcpc.sh /dd/kernel/udhcpc.sh 0755 0 0
+          file /bin/busybox /busybox/busybox 0755 0 0
+          EOF
+
+          echo ">>> Building kernel..."
+          cd /linux
+
+          cat /dd/kernel/kernel-config/common /dd/kernel/kernel-config/${{ matrix.arch }} > mini.config
+          make ARCH=${{ matrix.arch }} KCONFIG_ALLCONFIG=mini.config allnoconfig
+          make ARCH=${{ matrix.arch }} CONFIG_INITRAMFS_SOURCE=/tmp/cpio.list -j$(nproc) ${{ matrix.kernel_target }}
+
+          cp ${{ matrix.kernel_path }} /tmp/busybox-kernel
+
+          echo ">>> Uploading release..."
+          gh release -R mlyxshi/dd upload ${{ matrix.release_name }} /tmp/busybox-kernel --clobber

@@ -1,0 +1,5 @@
+**/result
+/test
+.DS_Store
+.vscode
+.claude

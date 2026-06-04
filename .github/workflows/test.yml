@@ -1,0 +1,43 @@
+name: "Boot Test"
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: bios-init
+            runner: ubuntu-latest
+          - name: amd-init
+            runner: ubuntu-latest
+          - name: arm-init
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: DeterminateSystems/nix-installer-action@main   # enables /dev/kvm by default
+
+    - name: Install QEMU
+      run: |
+        sudo apt-get update
+        if [ "${{ runner.arch }}" = "ARM64" ]; then
+          sudo apt-get install -y qemu-system-arm qemu-efi-aarch64 qemu-utils python3-pexpect
+        else
+          sudo apt-get install -y qemu-system-x86 ovmf qemu-utils python3-pexpect
+        fi
+
+    - name: Build image
+      # https://github.com/chainguard-dev/melange/issues/1508
+      run: |
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.${{ matrix.name }}.config.system.build.image)
+        echo "RAW=$outPath/${{ matrix.name }}.raw" >> "$GITHUB_ENV"
+
+    - name: Boot Test
+      run: python3 tests/qemu-boot-test.py ${{ matrix.name }} "$RAW"

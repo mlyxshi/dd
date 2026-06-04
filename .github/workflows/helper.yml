@@ -1,0 +1,29 @@
+name: "Upload static binary helper"
+on:
+  workflow_dispatch:
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: aarch64
+            runs-on: ubuntu-24.04-arm
+          - arch: x86_64
+            runs-on: ubuntu-latest
+
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+    - uses: actions/checkout@master
+    - uses: DeterminateSystems/nix-installer-action@main
+
+    - run: |
+        OutPath=$(nix build --no-link --print-out-paths nixpkgs#pkgsStatic.findutils)
+        gh release upload ${{ matrix.arch }} $OutPath/bin/find --clobber
+
+        OutPath=$(nix build --no-link --print-out-paths nixpkgs#pkgsStatic.kexec-tools)
+        gh release upload ${{ matrix.arch }} $OutPath/bin/kexec --clobber
