@@ -15,10 +15,11 @@
 
   boot.initrd.systemd.emergencyAccess = true;
 
-  boot.kernelParams =
-    [ "console=tty0" ]
-    ++ lib.optional pkgs.stdenv.hostPlatform.isAarch64 "console=ttyAMA0"
-    ++ lib.optional pkgs.stdenv.hostPlatform.isx86_64 "console=ttyS0";
+  boot.kernelParams = [
+    "console=tty0"
+  ]
+  ++ lib.optional pkgs.stdenv.hostPlatform.isAarch64 "console=ttyAMA0"
+  ++ lib.optional pkgs.stdenv.hostPlatform.isx86_64 "console=ttyS0";
 
   # resize root partition and filesystem after switch-root
   # https://www.freedesktop.org/software/systemd/man/latest/repart.d.html#Flags=
@@ -62,6 +63,11 @@
       }
     ];
     settings.PasswordAuthentication = false;
+  };
+
+  environment.etc.machine-id = {
+    text = "6a9857a393724b7a981ebb5b8495b9ea"; # make systemd happy
+    mode = "0444";
   };
 
   nix = {
