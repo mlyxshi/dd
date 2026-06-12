@@ -12,7 +12,7 @@ jobs:
       matrix:
         include:
           - arch: aarch64
-            runs-on: ubuntu-24.04-arm
+            runs-on: ubuntu-26.04-arm
           - arch: x86_64
             runs-on: ubuntu-latest
 

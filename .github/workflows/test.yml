@@ -15,7 +15,7 @@ jobs:
           - name: amd-init
             runner: ubuntu-latest
           - name: arm-init
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
 
     runs-on: ${{ matrix.runner }}
 

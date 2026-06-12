@@ -24,7 +24,7 @@ jobs:
             release_name: x86_64
 
           - arch: arm64
-            runner: ubuntu-24.04-arm
+            runner: ubuntu-26.04-arm
             kernel_target: vmlinuz.efi
             kernel_path: arch/arm64/boot/vmlinuz.efi
             release_name: aarch64
