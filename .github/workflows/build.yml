@@ -19,7 +19,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
-    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: NixOS/nix-installer-action@main
 
     - name: Configure OCI and rclone
       run: |

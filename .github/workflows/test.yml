@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@master
-    - uses: DeterminateSystems/nix-installer-action@main   # enables /dev/kvm by default
+    - uses: NixOS/nix-installer-action@main   # enables /dev/kvm by default
 
     - name: Install QEMU
       run: |

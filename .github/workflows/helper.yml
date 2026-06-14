@@ -19,7 +19,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     steps:
     - uses: actions/checkout@master
-    - uses: DeterminateSystems/nix-installer-action@main
+    - uses: NixOS/nix-installer-action@main
 
     - run: |
         OutPath=$(nix build --no-link --print-out-paths nixpkgs#pkgsStatic.findutils)
