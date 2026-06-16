@@ -1,0 +1,40 @@
+name: "Release DD image"
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: bios-init
+            runner: ubuntu-latest
+          - name: amd-init
+            runner: ubuntu-latest
+          - name: arm-init
+            runner: ubuntu-26.04-arm
+
+    runs-on: ${{ matrix.runner }}
+
+    steps:
+    - uses: actions/checkout@master
+    - uses: NixOS/nix-installer-action@main
+
+    - name: System Build
+      # https://github.com/chainguard-dev/melange/issues/1508
+      run: |
+        sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+        outPath=$(nix build --no-link --print-out-paths .#nixosConfigurations.${{ matrix.name }}.config.system.build.image)
+        echo "outPath=$outPath" >> "$GITHUB_ENV"
+
+    - name: Compress image
+      run: zstd -19 -o ${{ matrix.name }}.raw.zst $outPath/${{ matrix.name }}.raw
+
+    - uses: softprops/action-gh-release@v2
+      with:
+        tag_name: v${{ github.run_number }}
+        files: ${{ matrix.name }}.raw.zst
