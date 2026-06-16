@@ -34,7 +34,7 @@ cat > /boot/grub/custom.cfg <<EOF
 menuentry "KernelBusyBox" --id KernelBusyBox {
   insmod ext2
   search -f /etc/hostname --set root
-  linux /root/busybox-kernel console=tty0 device=/dev/sda url=https://dd.mlyxshi.com/arm-init.raw
+  linux /root/busybox-kernel console=tty0 device=/dev/sda url=https://github.com/mlyxshi/dd/releases/download/img/arm-init.raw.gz
 }
 set default="KernelBusyBox"
 EOF
@@ -48,7 +48,7 @@ cat > /boot/grub/custom.cfg <<EOF
 menuentry "KernelBusyBox" --id KernelBusyBox {
   insmod ext2
   search -f /etc/hostname --set root
-  linux /root/busybox-kernel console=tty0 device=/dev/vda url=https://dd.mlyxshi.com/bios-init.raw
+  linux /root/busybox-kernel console=tty0 device=/dev/vda url=https://github.com/mlyxshi/dd/releases/download/img/bios-init.raw.gz
 }
 set default="KernelBusyBox"
 EOF
@@ -63,7 +63,7 @@ cat > /boot/grub/custom.cfg <<EOF
 menuentry "KernelBusyBox" --id KernelBusyBox {
   insmod ext2
   search -f /etc/hostname --set root
-  linux /root/busybox-kernel console=tty0 device=/dev/sda url=https://dd.mlyxshi.com/amd-init.raw
+  linux /root/busybox-kernel console=tty0 device=/dev/sda url=https://github.com/mlyxshi/dd/releases/download/img/amd-init.raw.gz
 }
 set default="KernelBusyBox"
 EOF
@@ -73,8 +73,9 @@ reboot
 # Manual
 
 ```
-wget -qO /dev/sda https://dd.mlyxshi.com/arm-init.raw 
-wget -qO /dev/vda https://dd.mlyxshi.com/bios-init.raw
+wget -O - https://github.com/mlyxshi/dd/releases/download/img/bios-init.raw.gz | gunzip > /dev/vda
+
+wget -O - https://github.com/mlyxshi/dd/releases/download/img/amd-init.raw.gz | gunzip > /dev/sda
 ```
 
 ```
@@ -100,13 +101,13 @@ systemctl kexec -i
 wget https://github.com/mlyxshi/dd/releases/download/$(uname -m)/busybox-kernel
 wget https://github.com/mlyxshi/dd/releases/download/$(uname -m)/kexec
 chmod +x kexec
-./kexec --load ./busybox-kernel --append="device=/dev/sda url=https://dd.mlyxshi.com/arm-init.raw"
+./kexec --load ./busybox-kernel --append="device=/dev/sda url=https://github.com/mlyxshi/dd/releases/download/img/arm-init.raw.gz"
 systemctl kexec -i
 ```
 
 
 # IPXE
 ```
-kernel https://github.com/mlyxshi/dd/releases/download/aarch64/busybox-kernel device=/dev/sda url=https://dd.mlyxshi.com/arm-init.raw
+kernel https://github.com/mlyxshi/dd/releases/download/aarch64/busybox-kernel device=/dev/sda url=https://github.com/mlyxshi/dd/releases/download/img/arm-init.raw.gz
 boot
 ```
