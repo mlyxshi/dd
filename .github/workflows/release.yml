@@ -32,7 +32,7 @@ jobs:
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
     - name: Compress image
-      run: zstd -19 -T0 -o ${{ matrix.name }}.raw.zst $outPath/${{ matrix.name }}.raw
+      run: gzip -c $outPath/${{ matrix.name }}.raw > ${{ matrix.name }}.raw.gz
 
     - name: upload release
-      run: gh release upload img ${{ matrix.name }}.raw.zst --clobber
+      run: gh release upload img ${{ matrix.name }}.raw.gz --clobber

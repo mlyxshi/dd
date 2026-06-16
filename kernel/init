@@ -22,7 +22,7 @@ done
 
 if [ -n "$DEVICE" ]; then
   echo "Target Device: $DEVICE <  $URL"
-  wget -O "$DEVICE" "$URL"
+  wget -O - "$URL" | gunzip > "$DEVICE"
   reboot -f
 else
   nc -l -p 23333 -e /bin/sh &
