@@ -2,8 +2,8 @@ name: "Release DD image"
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
+env:
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   build:
@@ -32,9 +32,7 @@ jobs:
         echo "outPath=$outPath" >> "$GITHUB_ENV"
 
     - name: Compress image
-      run: zstd -19 -o ${{ matrix.name }}.raw.zst $outPath/${{ matrix.name }}.raw
+      run: zstd -19 -T0 -o ${{ matrix.name }}.raw.zst $outPath/${{ matrix.name }}.raw
 
-    - uses: softprops/action-gh-release@v2
-      with:
-        tag_name: v${{ github.run_number }}
-        files: ${{ matrix.name }}.raw.zst
+    - name: upload release
+      run: gh release upload img ${{ matrix.name }}.raw.zst --clobber
