@@ -96,12 +96,20 @@ systemctl kexec -i
 ```
 
 
-# Oracle ARM UEFI sda init
+# Oracle ARM UEFI sda init (Systemd 261)
 ```
-wget https://github.com/mlyxshi/dd/releases/download/$(uname -m)/busybox-kernel
-wget https://github.com/mlyxshi/dd/releases/download/$(uname -m)/kexec
-chmod +x kexec
-./kexec --load ./busybox-kernel --append="device=/dev/sda url=https://github.com/mlyxshi/dd/releases/download/img/arm-init.raw.gz"
+wget -O /boot/busybox-kernel https://github.com/mlyxshi/dd/releases/download/$(uname -m)/busybox-kernel
+
+
+mkdir -p /boot/loader/entries
+cat > /boot/loader/entries/dd.conf <<'EOF'
+title   dd installer
+linux   /busybox-kernel
+options device=/dev/sda url=https://github.com/mlyxshi/dd/releases/download/img/arm-init.raw.gz
+EOF
+
+bootctl list  
+bootctl set-oneshot dd.conf
 systemctl kexec -i
 ```
 
