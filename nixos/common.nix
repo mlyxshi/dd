@@ -87,7 +87,7 @@
 
   environment.systemPackages = with pkgs; [
     gitMinimal
-    fastfetch.minimal
+    fastfetch-unwrapped
     ghostty.terminfo
   ];
 
